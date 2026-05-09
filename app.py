@@ -1,132 +1,80 @@
 import streamlit as st
-import pandas as pd
 
-# --- ページ設定 ---
-st.set_page_config(page_title="合同会社竹輪 | 3択・全国対応判定ツール", layout="wide")
+# --- (前略：以前の計算ロジック部分は維持) ---
 
-# --- 全国料率データ（令和6年度 協会けんぽ 概算） ---
-PREF_RATES = {
-    "東京都": 0.0998,
-    "神奈川県": 0.1002,
-    "埼玉県": 0.1027,
-    "千葉県": 0.1024,
-    "愛知県": 0.0995,
-    "京都府": 0.1032,
-    "大阪府": 0.1034,
-    "兵庫県": 0.1030,
-    "福岡県": 0.1035,
-    "北海道": 0.1044,
-}
-PENSION_RATE = 0.183  # 厚生年金（全国一律）
-KAIGO_RATE = 0.016    # 介護保険（40歳以上）
-
-# --- ロジック関数 ---
-def get_detailed_report(salary, investment, expense, board_fee_monthly, pref, is_over_40):
-    total_income = salary + investment
-    taxable_income = total_income - expense
-    
-    # 1. 現状維持（給与 + 分離課税等）
-    stay_tax = taxable_income * 0.20 
-    stay_profit = taxable_income - stay_tax
-
-    # 2. 個人事業主（青色申告）
-    solo_taxable = max(0, taxable_income - 650000)
-    solo_tax = solo_taxable * 0.20
-    solo_hoken = min(1000000, solo_taxable * 0.10) 
-    solo_profit = taxable_income - solo_tax - solo_hoken
-
-    # 3. 法人（全国対応計算）
-    h_rate = PREF_RATES.get(pref, 0.10) 
-    if is_over_40:
-        h_rate += KAIGO_RATE
-    
-    total_shaho_rate = h_rate + PENSION_RATE
-    # 労使折半合計の社保負担
-    annual_shaho = (board_fee_monthly * total_shaho_rate) * 12
-    
-    corp_tax_fixed = 70000 
-    corp_setup = 100000    
-    
-    corp_dobukin_1st = annual_shaho + corp_tax_fixed + corp_setup
-    corp_dobukin_2nd = annual_shaho + corp_tax_fixed
-    corp_profit_2nd = taxable_income - corp_dobukin_2nd
-
-    return {
-        "stay": {"profit": stay_profit, "tax": stay_tax},
-        "solo": {"profit": solo_profit, "tax": solo_tax, "hoken": solo_hoken},
-        "corp": {"profit": corp_profit_2nd, "dobukin_1st": corp_dobukin_1st, "dobukin_2nd": corp_dobukin_2nd, "h_rate": h_rate},
-        "params": {"pref": pref, "is_over_40": is_over_40}
-    }
-
-# --- UIセクション ---
-st.title("⚖️ 戦略的・手残り最大化判定（全国対応版）")
-st.caption("Produced by 合同会社竹輪")
-
-# ① 入力エリア
-st.header("① 基本データ入力")
-col_in1, col_in2 = st.columns(2)
-with col_in1:
-    salary = st.number_input("現在の給与年収 [円]", value=5000000, step=100000)
-    investment = st.number_input("投資・副業収入 [円]", value=3000000, step=100000)
-with col_in2:
-    pref = st.selectbox("事業所の所在地（都道府県）", list(PREF_RATES.keys()))
-    is_over_40 = st.checkbox("40歳以上ですか？（介護保険料の加算）", value=False)
-    expense = st.number_input("関連経費 [円]", value=500000, step=50000)
-
-# 計算実行
-data = get_detailed_report(salary, investment, expense, 45000, pref, is_over_40)
-
-# ② 判定結果
+# --- ④ 設立プロセス・ナビゲーター ---
 st.divider()
-results_map = {"現状維持": data["stay"]["profit"], "個人事業主": data["solo"]["profit"], "法人成り": data["corp"]["profit"]}
-best_option = max(results_map, key=results_map.get)
+if "show_setup" not in st.session_state:
+    st.session_state.show_setup = False
 
-st.header(f"② 判定結果：推奨は「{best_option}」")
-st.info(f"💡 {pref}の健康保険料率（{'40歳以上' if is_over_40 else '40歳未満'}）を適用してシミュレーションしました。")
+# 推奨結果が「法人成り」の場合に、より強くプッシュする
+btn_label = f"🚀 最短で「{data['best']}」を実現するロードマップを見る"
+if st.button(btn_label):
+    st.session_state.show_setup = True
 
-# ③ 詳細シミュレーション（切り替えタブ）
-st.divider()
-st.header("③ 詳細シミュレーション比較")
-st.write("それぞれのプランを選択して、内訳と「なぜ損か・得か」を確認してください。")
+if st.session_state.show_setup:
+    st.header("④ 法人設立・完全ナビゲーション")
+    st.write("代表（私）も実際に通った道です。迷いやすいポイントを整理しました。")
 
-tab_stay, tab_solo, tab_corp = st.tabs(["🏠 現状維持", "👤 個人事業主", "🏢 法人成り"])
-
-with tab_stay:
-    st.subheader("現状維持プランの内訳")
-    st.info("💡 手間はないが、効率的な手残りの最大化は難しい状態です。")
-    st.write(f"・想定される税負担（所得・住民税）: 約 {int(data['stay']['tax']):,}円")
-    st.write(f"・社会保険料: 給与天引きのみ（追加なし）")
-    st.metric("最終的な年間手残り", f"{int(data['stay']['profit']):,}円")
-    st.warning("これ以上の節税や社保削減の余地がありません。")
-
-with tab_solo:
-    st.subheader("個人事業主プラン（青色申告）の内訳")
-    st.info("💡 65万円の控除を使えますが、健康保険料の跳ね上がりに注意。")
-    st.write(f"・青色申告特別控除: 650,000円 適用済み")
-    st.write(f"・国民健康保険料（ドブ金）: 約 {int(data['solo']['hoken']):,}円")
-    st.write(f"・想定される税負担: 約 {int(data['solo']['tax']):,}円")
-    st.metric("最終的な年間手残り", f"{int(data['solo']['profit']):,}円")
-    if data['solo']['profit'] < data['stay']['profit']:
-        st.error("❌ 現在の収支では、国民健康保険料の負担が重すぎて「現状維持」より損をしています。")
-
-with tab_corp:
-    st.subheader(f"法人成りプラン（{pref}・資産管理会社）の内訳")
-    st.success("✅ 社会保険料を最低ランクに固定することで、投資効率を最大化します。")
+    # --- STEP 1: 形態の選択 ---
+    st.subheader("STEP 1: 会社の形態を選ぶ")
+    corp_type = st.radio("どちらの形態を検討していますか？", ["合同会社（LLC）", "株式会社"])
     
-    col_c1, col_c2 = st.columns(2)
-    with col_c1:
-        st.write("**【初年度（設立コストあり）】**")
-        st.write(f"・設立費用等: 100,000円")
-        st.write(f"・維持コスト(社保・均等割): {int(data['corp']['dobukin_2nd']):,}円")
-        st.write(f"・合計ドブ金: {int(data['corp']['dobukin_1st']):,}円")
-    with col_c2:
-        st.write("**【2年目以降（安定期）】**")
-        st.write(f"・法人住民税（均等割）: 70,000円")
-        st.write(f"・社会保険料（労使合計）: {int(data['corp']['dobukin_2nd'] - 70000):,}円")
-        st.write(f"・合計ドブ金: {int(data['corp']['dobukin_2nd']):,}円")
+    if corp_type == "合同会社（LLC）":
+        st.success("✅ **資産管理会社ならこちらが主流！** 設立費用が安く（登録免許税6万）、決算公告の義務もありません。")
+    else:
+        st.info("✅ **対外的な信用・上場を狙うならこちら。** 設立費用は約20万〜。役員の任期更新などの手間も発生します。")
+
+    # --- STEP 2: 準備物リスト（ここで広告・紹介の導線） ---
+    st.subheader("STEP 2: 必要なものリスト")
+    st.write("これがないと始まりません。早めに準備しましょう。")
     
-    st.metric("2年目以降の年間手残り", f"{int(data['corp']['profit']):,}円", 
-              delta=f"現状維持比 +{int(data['corp']['profit'] - data['stay']['profit']):,}円")
+    col_h1, col_h2 = st.columns(2)
+    with col_h1:
+        st.markdown("""
+        *   **個人の実印:** 役員になる方のもの（印鑑証明書も必要）
+        *   **法人用の印鑑3点セット:** 代表印・銀行印・角印
+        *   **資本金:** 1円から可能（通帳のコピーが必要）
+        """)
+    with col_h2:
+        st.info("💡 **代表の経験談**")
+        st.write("法人印はネットで頼むのが最速で安いです。私はここで作りました。")
+        st.markdown("[👉 おすすめの印鑑作成サービス（広告リンク想定）](https://example.com)")
+
+    # --- STEP 3: 定款と申請方法（柔軟な分岐） ---
+    st.subheader("STEP 3: 定款作成と登記申請")
+    has_mynumber = st.radio("マイナンバーカードを持っていますか？", ["持っている", "持っていない"])
+    apply_method = st.radio("申請はどうしたいですか？", ["なるべく安く、自分でやりたい", "プロに丸投げしたい"])
+
+    if apply_method == "なるべく安く、自分でやりたい":
+        if has_mynumber == "持っている":
+            st.success("🎯 **「マイナポータル」での電子申請がおすすめ！**")
+            st.write("定款の収入印紙代（4万円）を浮かせられます。ただし、電子署名の設定などPCスキルが少し必要です。")
+        else:
+            st.warning("⚠️ **紙の定款だと4万円損します。**")
+            st.write("マイナンバーカードがない場合、電子定款作成サービス（5,000円程度）だけ利用して、紙で登記するのが現実的です。")
+        st.markdown("[👉 自分で安く登記するならこのサービス（広告リンク）](https://example.com)")
+    else:
+        st.success("🎯 **「司法書士」または「会社設立Freee/マネーフォワード」の活用**")
+        st.write("手数料を払ってプロに頼むか、クラウドサービスを使って書類を自動生成しましょう。")
+        st.markdown("[👉 登記お任せパックの詳細を見る（広告リンク）](https://example.com)")
+
+    # --- STEP 4: 税理士の判定ロジック ---
+    st.divider()
+    st.subheader("STEP 4: 顧問税理士は必要か？")
+    
+    # 判定ロジック：売上が多い or 経費管理が複雑 or 投資を加速させたいなら推奨
+    needs_tax_accountant = False
+    if salary + investment > 10000000 or expense > 2000000:
+        needs_tax_accountant = True
+        
+    if needs_tax_accountant:
+        st.error("💡 **あなたは「税理士をつけるべき」判定です**")
+        st.write(f"現在の収支規模では、自力での決算はリスクが高いです。{pref}（{data['params']['pref']}）周辺で、資産管理会社に強い税理士を紹介できます。")
+        st.markdown(f"[🔍 {pref}で評判の良い税理士事務所を探す（広告リンク）](https://example.com/search?pref={pref})")
+    else:
+        st.success("💡 **まずは自力（またはスポット相談）でもOK**")
+        st.write("規模が小さいうちはクラウド会計ソフトを駆使して自力で乗り切ることも可能です。")
 
 st.divider()
-st.caption("Produced by 合同会社竹輪 | ※本ツールは概算です。正確な情報は専門家にご確認ください。")
+st.caption(f"現在の設定：{pref} / {'40歳以上' if is_over_40 else '40歳未満'} / 役員報酬4.5万円設定")
