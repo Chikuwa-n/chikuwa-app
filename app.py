@@ -2,79 +2,93 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
-# --- ページ設定 ---
-st.set_page_config(page_title="合同会社竹輪 | 法人成り診断ツール", layout="wide")
+# --- 設定 ---
+st.set_page_config(page_title="合同会社竹輪 | 最適化判定ツール", layout="wide")
 
-# --- 京都府の料率（2026年想定・概算） ---
-# 協会けんぽ京都府（介護保険第2号含む）
-HEALTH_RATE = 0.1165 / 2  
-PENSION_RATE = 0.183 / 2  
+# --- ロジック関数 ---
+def calculate_all_scenarios(salary_income, investment_income, expense, board_fee_monthly, prefecture):
+    # 簡略化した税率・社保率（実際はもっと複雑ですが判定用に定義）
+    TAX_RATE = 0.20  # 所得税・住民税合算（概算）
+    PREF_RATE = 0.15 # 社会保険料率（労使合計・京都想定）
 
-# --- タイトル表示 ---
-st.title("🚀 個人事業主 vs 法人成り 損益分岐シミュレーター")
-st.markdown("""
-資産管理会社（合同会社）の設立を検討している投資家・個人事業主向けの精密診断ツールです。
-**「ドブ金（社会保険料・税金）」**の差を可視化します。
-""")
+    # 1. 現状維持（給与 + 株/副業を個人で）
+    # 特定口座なら分離課税20.315%だが、ここでは総合課税の個人事業主との比較用に簡易化
+    status_stay_tax = (salary_income + investment_income - expense) * TAX_RATE
+    status_stay_profit = (salary_income + investment_income - expense) - status_stay_tax
 
-# --- サイドバー：ユーザー入力 ---
-st.sidebar.header("📊 収支シミュレーション設定")
-income = st.sidebar.number_input("年間売上（運用益含む） [円]", value=8000000, step=100000)
-expense = st.sidebar.number_input("年間経費 [円]", value=1000000, step=100000)
+    # 2. 個人事業主（青色申告）
+    # 青色申告控除65万を適用
+    status_solo_tax = max(0, (salary_income + investment_income - expense - 650000)) * TAX_RATE
+    status_solo_profit = (salary_income + investment_income - expense) - status_solo_tax
 
-st.sidebar.subheader("法人化後の設定")
-board_fee_monthly = st.sidebar.slider("役員報酬（月額） [円]", 45000, 500000, 45000)
-is_first_year = st.sidebar.checkbox("初年度のシミュレーション", value=True)
-
-# --- 計算ロジック ---
-def calculate_results(income, expense, board_fee_monthly, first_year):
-    # 1. 法人のドブ金計算
-    # 社会保険料（労使合計）
-    annual_shaho = (board_fee_monthly * (HEALTH_RATE + PENSION_RATE) * 2) * 12
-    # 法人住民税均等割（赤字でもかかる）
-    fixed_tax = 70000
-    # 設立費用
-    setup_cost = 100000 if first_year else 0
+    # 3. 法人成り（合同会社・資産管理）
+    # 役員報酬設定による社保削減を考慮
+    annual_board_fee = board_fee_monthly * 12
+    corporate_shaho = (board_fee_monthly * PREF_RATE * 2) * 12
+    corporate_tax_fixed = 70000 # 均等割
+    setup_cost = 100000 # 初年度コスト
     
-    total_dobukin = annual_shaho + fixed_tax + setup_cost
-    
-    # 法人の手残り（簡易：法人税等は一旦考慮外）
-    net_profit = income - expense - (board_fee_monthly * 12) - total_dobukin
-    
-    return total_dobukin, net_profit
+    status_corp_dobukin = corporate_shaho + corporate_tax_fixed + setup_cost
+    status_corp_profit = (salary_income + investment_income - expense) - status_corp_dobukin
 
-# 実行
-dobukin, profit = calculate_results(income, expense, board_fee_monthly, is_first_year)
+    return {
+        "現状維持": int(status_stay_profit),
+        "個人事業主": int(status_solo_profit),
+        "法人成り": int(status_corp_profit),
+        "法人ドブ金": int(status_corp_dobukin)
+    }
 
-# --- メイン画面表示 ---
+# --- UI部分 ---
+st.title("⚖️ 独立・法人成り・現状維持 判定ツール")
+st.caption("あなたの今の収入状況から、最も『手残り』が多くなる形態を判定します。")
+
+# ① 入力セクション
+st.header("① 現在の収入情報を入力")
+col_in1, col_in2, col_in3 = st.columns(3)
+with col_in1:
+    salary = st.number_input("現在の給与年収 [円]", value=5000000, step=100000)
+with col_in2:
+    investment = st.number_input("株・副業などの収入 [円]", value=3000000, step=100000)
+with col_in3:
+    expense = st.number_input("関連する経費 [円]", value=500000, step=50000)
+
+prefecture = st.selectbox("所在都道府県", ["京都府", "東京都", "大阪府"])
+
+# ② 判定セクション
 st.divider()
+st.header("② あなたに最適なプランは？")
 
-col1, col2 = st.columns(2)
+results = calculate_all_scenarios(salary, investment, expense, 45000, prefecture)
+best_option = max(results, key=lambda k: results[k] if k != "法人ドブ金" else -1)
 
-with col1:
-    st.header("📉 かえってこないお金（ドブ金）")
-    st.subheader(f"{int(dobukin):,} 円 / 年")
-    st.caption("※設立費用・社保合計・均等割の合算")
+st.success(f"🏆 推奨： **{best_option}**")
+st.write(f"もっとも手残りが多くなる形態は **{best_option}** です。")
 
-with col2:
-    st.header("💰 法人の純手残り")
-    st.subheader(f"{int(profit):,} 円 / 年")
-    st.caption("※売上から経費・報酬・ドブ金を引いた残金")
+# 比較表
+df_res = pd.DataFrame({
+    "形態": ["現状維持", "個人事業主", "法人成り"],
+    "年間最終手残り": [results["現状維持"], results["個人事業主"], results["法人成り"]]
+})
+st.table(df_res)
 
-# --- 視覚化グラフ ---
+# ③ 詳細セクション
+if st.checkbox("③ 詳細な費用・収益シミュレーションを表示"):
+    st.header("📊 詳細シミュレーション")
+    
+    tab1, tab2 = st.tabs(["初年度", "2年目以降"])
+    
+    with tab1:
+        st.subheader("法人化した場合の初年度内訳")
+        st.write(f"・設立費用（ドブ金）: 約 100,000円")
+        st.write(f"・社会保険料（労使合計）: 約 {results['法人ドブ金'] - 170000:,}円")
+        st.write(f"・法人住民税（均等割）: 70,000円")
+        st.error(f"初年度のドブ金合計: {results['法人ドブ金']:,}円")
+
+    with tab2:
+        st.subheader("法人化 2年目以降")
+        st.write(f"・社会保険料（労使合計）: 約 {results['法人ドブ金'] - 170000:,}円")
+        st.write(f"・法人住民税（均等割）: 70,000円")
+        st.success(f"2年目以降のドブ金合計: {results['法人ドブ金'] - 100000:,}円")
+
 st.divider()
-st.subheader("年度別・構成比の確認")
-
-# 棒グラフ（初年度 vs 2年目）
-first_year_cost, _ = calculate_results(income, expense, board_fee_monthly, True)
-second_year_cost, _ = calculate_results(income, expense, board_fee_monthly, False)
-
-fig = go.Figure(data=[
-    go.Bar(name='初年度', x=['ドブ金'], y=[first_year_cost], marker_color='#eb4034'),
-    go.Bar(name='2年目以降', x=['ドブ金'], y=[second_year_cost], marker_color='#34eb89')
-])
-fig.update_layout(barmode='group', title="年度別のドブ金コスト比較")
-st.plotly_chart(fig, use_container_width=True)
-
-# 代表へのアドバイス
-st.info(f"💡 **代表へのヒント:** 役員報酬を **{board_fee_monthly:,}円** に設定すると、年間の社会保険料（法人＋個人）は約 **{int(dobukin - 70000 - (100000 if is_first_year else 0)):,}円** です。")
+st.caption("Produced by 合同会社竹輪")
