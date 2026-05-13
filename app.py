@@ -94,7 +94,7 @@ if st.session_state.show_setup:
 
     st.subheader("📝 定款作成と法務局申請")
     st.write("電子申請を利用することで、定款印紙代（4万円）を確実に0円にします。")
-    st.link_button("会社設立クラウドサービス一覧 ↗️", "https://px.a8.net/svt/ejp?a8mat=4B3PIX+62I3SI+3SPO+9FDI8Y")
+    st.link_button("会社設立クラウドサービス一覧 ↗️", "https://px.a8.net/svt/ejp?a8mat=4B3PIX+6BFLV6+4JGQ+HV7V6")
 
 # --- 8. 検索エンジン向けFAQ（SEO強化） ---
 st.divider()
