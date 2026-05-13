@@ -89,7 +89,7 @@ if st.session_state.show_setup:
         st.write("・資本金（1円〜）が振り込まれた通帳のコピー")
     with col_r:
         st.info("💡 **リコメンド**")
-        st.write("印鑑は「実印・銀行印・角印」の3点が必要です。品質・価格・納期のバランスから、私はこちらを推奨しています。")
+        st.write("印鑑は「実印・銀行印・角印」の3点が必要です。品質・価格・納期のバランスから、こちらを推奨しています。")
         st.link_button("はんこ森：会社設立印鑑3点セット ↗️", "https://your-affiliate-link-hankomori.com")
 
     st.subheader("📝 定款作成と法務局申請")
