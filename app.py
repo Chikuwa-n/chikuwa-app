@@ -88,9 +88,9 @@ if st.session_state.show_setup:
         st.write("・法人印3点セット（代表印・銀行印・角印）")
         st.write("・資本金（1円〜）が振り込まれた通帳のコピー")
     with col_r:
-        st.info("💡 **リコメンド**")
-        st.write("印鑑は「実印・銀行印・角印」の3点が必要です。品質・価格・納期のバランスから、こちらを推奨しています。")
-        st.link_button("はんこ森：会社設立印鑑3点セット ↗️", "https://your-affiliate-link-hankomori.com")
+        st.info("💡 **リコメンド(広告ではありません)**")
+        st.write("アフィリエイト提携はありませんが、私は『はんこ森』で買いました。印鑑は「実印・銀行印・角印」の3点が必要です。3点セットで3,750円と、他社より圧倒的に安かったです。無理に高い店で買う必要はありません。")
+        st.link_button("はんこ森：会社設立印鑑3点セット ↗️", "https://hankomori.com/SHOP/COP-3SET-AKNJ.html?gad_source=1&gad_campaignid=20522573694&gbraid=0AAAAADHGPQYBxVIogTuZ1qiGPADQHCy-V&gclid=CjwKCAjwn4vQBhBsEiwAq3hhN5jUxsp-VkYJ9CYvF6SiCO31EQaat1zItZWHjSR-98QDZdi8Lkr4WRoCwtoQAvD_BwE")
 
     st.subheader("📝 定款作成と法務局申請")
     st.write("電子申請を利用することで、定款印紙代（4万円）を確実に0円にします。")
