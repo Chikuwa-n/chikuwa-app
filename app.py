@@ -79,10 +79,9 @@ with t3:
     col_freee, col_mf = st.columns(2)
     
     with col_freee:
-        st.image("https://www.freee.co.jp/common/img/logo.png", width=100) # freeeのロゴ等
-        st.write("**freee（フリー）**")
-        st.caption("初めての法人設立に特化。ガイドに沿うだけで書類作成が完結します。")
-        st.link_button("（freee）", "https://px.a8.net/svt/ejp?a8mat=4B3PIX+62I3SI+3SPO+9FL80Y") # ここにコピーしたURL
+        st.write("**freee**")
+        st.caption("初めての法人設立に特化。知識がなくても簡単に書類が作成できます。")
+        st.link_button("まずは無料で使ってみる", "https://px.a8.net/svt/ejp?a8mat=4B3PIX+62I3SI+3SPO+9FL80Y") # ここにコピーしたURL
 
     with col_mf:
         # マネーフォワード等も提携済みならここに配置
