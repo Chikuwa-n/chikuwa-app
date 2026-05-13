@@ -72,7 +72,7 @@ if st.session_state.show_setup:
     with col_l:
         st.markdown("- **個人の実印・印鑑証明**\n- **法人印3点セット** (代表印・銀行印・角印)\n- **資本金** (1円〜)")
     with col_r:
-        st.info("💡 **代表の推奨リソース**")
+        st.info("💡 **推奨リソース**")
         st.write("法人印は「実印・銀行印・角印」の3点が必要です。品質と価格のバランスから、私はこちらを推奨しています。")
         # はんこ森への導線（さりげなく）
         st.link_button("はんこ森：会社設立3点セット ↗️", "https://your-affiliate-link-hankomori.com")
