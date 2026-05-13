@@ -87,7 +87,7 @@ with t3:
         # マネーフォワード等も提携済みならここに配置
         st.write("**マネーフォワード クラウド**")
         st.caption("仕訳の自動化が強力。銀行口座やカードとの連携が非常にスムーズです。")
-        st.link_button("法人用アカウントを作成する", "https://px.a8.net/svt/ejp?a8mat=YYYYY") # ここにコピーしたURL
+        st.link_button("まずは無料で使ってみる", "https://px.a8.net/svt/ejp?a8mat=4B3PIX+6BFLV6+4JGQ+NSWRM&a8ejpredirect=https%3A%2F%2Fbiz.moneyforward.com%2Fsolution-accounting%2F") # ここにコピーしたURL
 
     st.info("💡 **リテラシー重視のアドバイス**\n\n"
             "マイクロ法人の運営は「いかに事務作業を減らすか」が鍵です。会計ソフトを導入することで、"
