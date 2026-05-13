@@ -71,7 +71,28 @@ with t3:
     st.metric("2年目以降の手残り", f"{int(data['corp_profit']):,}円", 
               delta=f"現状比 +{int(data['corp_profit'] - data['stay_profit']):,}円")
     st.success("社会保険料削減スキームを適用することで、手残りを最大化できます。")
+# ここから会計ソフトの動線
+    st.markdown("---")
+    st.subheader("🏢 法人化をスムーズに進めるための推奨ツール")
+    st.write("法人登記から日々の経理まで自動化できるクラウドサービスです。")
 
+    col_freee, col_mf = st.columns(2)
+    
+    with col_freee:
+        st.image("https://www.freee.co.jp/common/img/logo.png", width=100) # freeeのロゴ等
+        st.write("**freee（フリー）**")
+        st.caption("初めての法人設立に特化。ガイドに沿うだけで書類作成が完結します。")
+        st.link_button("無料で設立書類を作る（freee）", "https://px.a8.net/svt/ejp?a8mat=XXXXX") # ここにコピーしたURL
+
+    with col_mf:
+        # マネーフォワード等も提携済みならここに配置
+        st.write("**マネーフォワード クラウド**")
+        st.caption("仕訳の自動化が強力。銀行口座やカードとの連携が非常にスムーズです。")
+        st.link_button("法人用アカウントを作成する", "https://px.a8.net/svt/ejp?a8mat=YYYYY") # ここにコピーしたURL
+
+    st.info("💡 **リテラシー重視のアドバイス**\n\n"
+            "マイクロ法人の運営は「いかに事務作業を減らすか」が鍵です。会計ソフトを導入することで、"
+            "税理士に丸投げせずとも自分で決算まで完結できる体制が整います。")
 # --- 7. 法人設立ナビ（はんこ森連携） ---
 st.divider()
 if "show_setup" not in st.session_state: st.session_state.show_setup = False
