@@ -82,7 +82,7 @@ with t3:
         st.image("https://www.freee.co.jp/common/img/logo.png", width=100) # freeeのロゴ等
         st.write("**freee（フリー）**")
         st.caption("初めての法人設立に特化。ガイドに沿うだけで書類作成が完結します。")
-        st.link_button("無料で設立書類を作る（freee）", "https://px.a8.net/svt/ejp?a8mat=XXXXX") # ここにコピーしたURL
+        st.link_button("（freee）", "https://px.a8.net/svt/ejp?a8mat=4B3PIX+62I3SI+3SPO+9FL80Y") # ここにコピーしたURL
 
     with col_mf:
         # マネーフォワード等も提携済みならここに配置
