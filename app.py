@@ -75,7 +75,7 @@ data = get_detailed_report(salary, investment, expense, 45000, pref, is_over_40)
 # --- ② 判定結果 ---
 st.divider()
 st.header(f"2. 判定：あなたに最適な形態は「{data['best']}」")
-st.write(f"現在の収支では、**{data['best']}** を選択することで、税金と社会保険料の「ドブ金」を最小化し、効率的な資産形成が可能です。")
+st.write(f"現在の収支では、**{data['best']}** を選択することで、税金と社会保険料の「手元に残らないお金」を最小化し、効率的な資産形成が可能です。")
 
 # --- ③ 詳細タブ ---
 st.header("3. 形態別シミュレーション詳細")
